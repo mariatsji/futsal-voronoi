@@ -57,7 +57,6 @@ export function courtSvg(underlay = "", portrait = false): string {
   ${courtLines()}
   </g>
   <text x="0.3" y="${MARGIN / 2}" fill="#fff" fill-opacity="0.9" font-size="1.2" font-weight="bold" font-family="sans-serif" text-anchor="start" dominant-baseline="central" pointer-events="none">Futsal Voronoi</text>
-  <text x="${vw - 0.3}" y="${vh - MARGIN / 2}" fill="#fff" fill-opacity="0.6" font-size="0.5" font-family="sans-serif" text-anchor="end" dominant-baseline="central" pointer-events="none">© Sjur Millidahl ${new Date().getFullYear()}</text>
 </svg>
 `;
 }
