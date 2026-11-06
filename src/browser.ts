@@ -64,3 +64,8 @@ document.getElementById("info-close")!.addEventListener("click", () => infoDialo
 infoDialog.addEventListener("click", (e) => {
   if (e.target === infoDialog) infoDialog.close();
 });
+
+// Offline support; only in production builds so the dev server is never served stale files.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
