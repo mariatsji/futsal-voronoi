@@ -26,9 +26,7 @@ function end(side: "left" | "right"): string {
 
   return `
     <path d="${area}" fill="none"/>
-    <rect x="${goalX}" y="${topPost}" width="${GOAL_DEPTH}" height="${GOAL_WIDTH}" fill="none"/>
-    <circle cx="${x(6)}" cy="${mid}" r="0.15" fill="#fff" stroke="none"/>
-    <circle cx="${x(10)}" cy="${mid}" r="0.15" fill="#fff" stroke="none"/>`;
+    <rect x="${goalX}" y="${topPost}" width="${GOAL_DEPTH}" height="${GOAL_WIDTH}" fill="none"/>`;
 }
 
 /** SVG fragment for the court lines, in metres (origin at the top-left corner of the court). */
@@ -38,7 +36,7 @@ export function courtLines(): string {
     <rect x="0" y="0" width="${COURT_LENGTH}" height="${COURT_WIDTH}" fill="none"/>
     <line x1="${COURT_LENGTH / 2}" y1="0" x2="${COURT_LENGTH / 2}" y2="${COURT_WIDTH}"/>
     <circle cx="${COURT_LENGTH / 2}" cy="${mid}" r="${CENTER_CIRCLE_RADIUS}" fill="none"/>
-    <circle cx="${COURT_LENGTH / 2}" cy="${mid}" r="0.15" fill="#fff" stroke="none"/>${end("left")}${end("right")}
+    ${end("left")}${end("right")}
   </g>`;
 }
 
