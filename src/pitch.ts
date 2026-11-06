@@ -11,13 +11,24 @@ export interface Player {
 const BLUE = "#3366cc";
 const RED = "#cc3333";
 
-export function createPlayers(perTeam = 5): Player[] {
-  return Array.from({ length: perTeam * 2 }, (_, i) => ({
-    x: Math.random() * COURT_LENGTH,
-    y: Math.random() * COURT_WIDTH,
-    team: i < perTeam ? BLUE : RED,
-    number: (i % perTeam) + 1,
+// Starting formation (1-2-1) for the blue team, defending the left goal; red is the same rotated 180°.
+const FORMATION: [number, number][] = [
+  [1, 10], // 1: goalkeeper
+  [7, 10], // 2: defender
+  [13, 4], // 3: left wing
+  [13, 16], // 4: right wing
+  [18, 10], // 5: pivot
+];
+
+export function createPlayers(): Player[] {
+  const blue = FORMATION.map(([x, y], i) => ({ x, y, team: BLUE, number: i + 1 }));
+  const red = FORMATION.map(([x, y], i) => ({
+    x: COURT_LENGTH - x,
+    y: COURT_WIDTH - y,
+    team: RED,
+    number: i + 1,
   }));
+  return [...blue, ...red];
 }
 
 // Each team gets its own hue family (blue-ish / red-ish), varied per player so cells stay distinguishable.
@@ -60,4 +71,29 @@ export function renderPlayers(players: Player[], portrait = false): string {
     )
     .join("\n  ");
   return `${cells}\n  ${dots}`;
+}
+
+export interface Ball {
+  x: number;
+  y: number;
+}
+
+export const BALL_RADIUS = 0.5;
+
+// Starts at the red goalkeeper's feet, just in front of him.
+export const createBall = (): Ball => ({ x: COURT_LENGTH - 1 - PLAYER_RADIUS - BALL_RADIUS, y: COURT_WIDTH / 2 });
+
+/** SVG fragment for a draggable ball: a white circle with a black pentagon, as seen from above. */
+export function renderBall(ball: Ball): string {
+  const r = BALL_RADIUS;
+  const pentagon = Array.from({ length: 5 }, (_, k) => {
+    const a = (k * 2 * Math.PI) / 5 - Math.PI / 2;
+    return `${(Math.cos(a) * r * 0.45).toFixed(3)},${(Math.sin(a) * r * 0.45).toFixed(3)}`;
+  }).join(" ");
+  return (
+    `<g data-ball style="cursor:grab" transform="translate(${ball.x.toFixed(2)} ${ball.y.toFixed(2)})">` +
+    `<circle r="${r}" fill="#fff" stroke="#222" stroke-width="0.07"/>` +
+    `<polygon points="${pentagon}" fill="#222"/>` +
+    `</g>`
+  );
 }
