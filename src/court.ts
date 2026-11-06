@@ -42,16 +42,27 @@ export function courtLines(): string {
   </g>`;
 }
 
-/** Full SVG document of the court seen from above, optionally with extra content drawn under the lines. */
-export function courtSvg(underlay = "", portrait = false): string {
+/**
+ * Full SVG document of the court seen from above, optionally with extra content drawn under the lines.
+ * `aspect` (container width / height) makes the drawing grow to fill the container, so no unused space is left.
+ */
+export function courtSvg(underlay = "", portrait = false, aspect = 0): string {
   const w = COURT_LENGTH + 2 * MARGIN;
   const h = COURT_WIDTH + 2 * MARGIN;
   // In portrait the court is rotated 90° clockwise so it fills a tall screen.
-  const [vw, vh] = portrait ? [h, w] : [w, h];
+  const [baseW, baseH] = portrait ? [h, w] : [w, h];
+  let vw = baseW;
+  let vh = baseH;
+  if (aspect > 0) {
+    if (aspect > baseW / baseH) vw = baseH * aspect;
+    else vh = baseW / aspect;
+  }
+  const offX = (vw - baseW) / 2;
+  const offY = (vh - baseH) / 2;
   const transform = portrait ? `translate(${h} 0) rotate(90)` : "";
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${vw * 20}" height="${vh * 20}" viewBox="0 0 ${vw} ${vh}">
-  <g id="court" transform="${transform} translate(${MARGIN} ${MARGIN})">
-  <rect x="${-MARGIN}" y="${-MARGIN}" width="${w}" height="${h}" fill="#2d6a4f"/>
+  <rect width="${vw}" height="${vh}" fill="#2d6a4f"/>
+  <g id="court" transform="translate(${offX} ${offY}) ${transform} translate(${MARGIN} ${MARGIN})">
   <rect x="0" y="0" width="${COURT_LENGTH}" height="${COURT_WIDTH}" fill="#d98c3f"/>
   ${underlay}
   ${courtLines()}
