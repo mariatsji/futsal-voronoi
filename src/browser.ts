@@ -14,7 +14,8 @@ const layerContent = () => renderPlayers(players, portraitQuery.matches) + rende
 
 function render(): void {
   const portrait = portraitQuery.matches;
-  app.innerHTML = courtSvg(`<g id="layer">${layerContent()}</g>`, portrait);
+  const aspect = app.clientWidth > 0 && app.clientHeight > 0 ? app.clientWidth / app.clientHeight : 0;
+  app.innerHTML = courtSvg(`<g id="layer">${layerContent()}</g>`, portrait, aspect);
   svg = app.querySelector("svg")!;
   layer = svg.querySelector("#layer")!;
 }
@@ -54,6 +55,10 @@ app.addEventListener("pointerup", stop);
 app.addEventListener("pointercancel", stop);
 
 portraitQuery.addEventListener("change", render);
+// Re-fit when the container changes size (window resize, iOS toolbars, rotation).
+new ResizeObserver(() => {
+  if (dragging === null) render();
+}).observe(app);
 render();
 
 const infoDialog = document.getElementById("info-dialog") as HTMLDialogElement;
