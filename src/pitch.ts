@@ -33,7 +33,10 @@ export function createPlayers(): Player[] {
 
 // Each team gets its own hue family (blue-ish / red-ish), varied per player so cells stay distinguishable.
 function cellColor(p: Player, i: number, perTeam: number): string {
-  const j = i % perTeam;
+  const last = perTeam - 1;
+  const own = i % perTeam;
+  // Blue players 1 and 5 trade colors.
+  const j = p.team === BLUE && (own === 0 || own === last) ? last - own : own;
   const t = perTeam > 1 ? j / (perTeam - 1) : 0;
   const hue = p.team === BLUE ? 185 + t * 70 : (340 + t * 70) % 360;
   const light = j % 2 === 0 ? 50 : 62;
@@ -66,7 +69,7 @@ export function renderPlayers(players: Player[], portrait = false): string {
       (p, i) =>
         `<g data-player="${i}" style="cursor:grab" opacity="${isOnCourt(p) ? 1 : 0.6}">` +
         `<circle cx="${p.x.toFixed(2)}" cy="${p.y.toFixed(2)}" r="${PLAYER_RADIUS}" fill="${p.team}" stroke="#fff" stroke-width="0.1"/>` +
-        `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"${portrait ? ` transform="rotate(-90 ${p.x.toFixed(2)} ${p.y.toFixed(2)})"` : ""} fill="#fff" font-size="1" font-weight="bold" font-family="sans-serif" text-anchor="middle" dominant-baseline="central" pointer-events="none">${p.number}</text>` +
+        `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}"${portrait ? ` transform="rotate(-90 ${p.x.toFixed(2)} ${p.y.toFixed(2)})"` : ""} fill="#fff" font-size="1" font-weight="bold" font-family="sans-serif" text-anchor="middle" dominant-baseline="central" dy="-0.08" pointer-events="none">${p.number}</text>` +
         `</g>`,
     )
     .join("\n  ");
