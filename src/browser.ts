@@ -1,5 +1,6 @@
 import { COURT_LENGTH, COURT_WIDTH, MARGIN, courtSvg } from "./court.js";
-import { PLAYER_RADIUS, createBall, createPlayers, renderBall, renderPlayers } from "./pitch.js";
+import type { Player } from "./pitch.js";
+import { MAX_SPEED, PLAYER_RADIUS, createBall, createPlayers, renderBall, renderPlayers } from "./pitch.js";
 
 const players = createPlayers();
 const ball = createBall();
@@ -32,32 +33,72 @@ function toCourt(e: PointerEvent): { x: number; y: number } {
   return { x: clamp(p.x, COURT_LENGTH), y: clamp(p.y, COURT_WIDTH) };
 }
 
+const LONG_PRESS_MS = 500;
+const LONG_PRESS_SLOP = 8; // px of movement that cancels a long press
+let aiming: Player | null = null;
+let pressTimer: number | undefined;
+let pressStart = { x: 0, y: 0 };
+
 app.addEventListener("pointerdown", (e) => {
   const target = e.target as Element;
-  if (target.closest("[data-ball]")) {
+  const arrowEl = target.closest("[data-arrow]");
+  if (arrowEl) {
+    aiming = players[Number(arrowEl.getAttribute("data-arrow"))];
+  } else if (target.closest("[data-ball]")) {
     dragging = ball;
   } else {
     const el = target.closest("[data-player]");
     if (!el) return;
-    dragging = players[Number(el.getAttribute("data-player"))];
+    const player = players[Number(el.getAttribute("data-player"))];
+    dragging = player;
+    pressStart = { x: e.clientX, y: e.clientY };
+    pressTimer = window.setTimeout(() => {
+      dragging = null;
+      aiming = player;
+      player.vx = player.vy = 0;
+      layer.innerHTML = layerContent();
+    }, LONG_PRESS_MS);
   }
   svg.setPointerCapture(e.pointerId);
 });
 
 app.addEventListener("pointermove", (e) => {
+  if (pressTimer !== undefined && Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) > LONG_PRESS_SLOP) {
+    clearTimeout(pressTimer);
+    pressTimer = undefined;
+  }
+  if (aiming !== null) {
+    const p = toCourt(e);
+    let vx = p.x - aiming.x;
+    let vy = p.y - aiming.y;
+    const len = Math.hypot(vx, vy);
+    if (len > MAX_SPEED) {
+      vx *= MAX_SPEED / len;
+      vy *= MAX_SPEED / len;
+    }
+    aiming.vx = vx;
+    aiming.vy = vy;
+    layer.innerHTML = layerContent();
+    return;
+  }
   if (dragging === null) return;
   Object.assign(dragging, toCourt(e));
   layer.innerHTML = layerContent();
 });
 
-const stop = () => (dragging = null);
+const stop = () => {
+  clearTimeout(pressTimer);
+  pressTimer = undefined;
+  dragging = null;
+  aiming = null;
+};
 app.addEventListener("pointerup", stop);
 app.addEventListener("pointercancel", stop);
 
 portraitQuery.addEventListener("change", render);
 // Re-fit when the container changes size (window resize, iOS toolbars, rotation).
 new ResizeObserver(() => {
-  if (dragging === null) render();
+  if (dragging === null && aiming === null) render();
 }).observe(app);
 render();
 
